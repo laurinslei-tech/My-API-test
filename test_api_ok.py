@@ -45,4 +45,4 @@ def test_post_param(base_url, api_headers, title, valid):
         assert data["title"] == "" or data["title"] is None
     print(f"参数化: title='{title}' -> {'PASS' if valid else '异常OK'}")
 
-print("🎉 CI/CD测试触发啦！")
+print("🎉 CI/CD测试触发啦！")print("Actions跑啦！")

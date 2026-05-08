@@ -11,21 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4  # 拉代码
+    - uses: actions/checkout@v4
 
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    - name: Install deps & Run pytest  # 合并pip+测试
+    - name: Install & Test
       run: |
         pip install pytest requests pytest-html
         pytest test_api_ok.py -v --html=report.html --self-contained-html
 
-    - name: Upload report  # 下载HTML报告
+    - name: Upload HTML Report  # 强制上传
       uses: actions/upload-artifact@v4
-      if: always()  # 失败也上传
+      if: always()  # 总是上传
       with:
-        name: pytest-report-${{ github.run_number }}
+        name: test-report
         path: report.html
+        retention-days: 7  # 保留7天
