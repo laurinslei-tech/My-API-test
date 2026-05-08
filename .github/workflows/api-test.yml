@@ -1,15 +1,10 @@
-name: API Test CI/CD
+name: API Test with Allure
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
 
@@ -20,13 +15,32 @@ jobs:
 
     - name: Install & Test
       run: |
-        pip install pytest requests pytest-html
-        pytest test_api_ok.py -v --html=report.html --self-contained-html
+        pip install -r requirements.txt
+        pytest test_api_ok.py -v --alluredir=reports --clean-alluredir
 
-    - name: Upload HTML Report  # 强制上传
+    - name: Upload Allure Results
       uses: actions/upload-artifact@v4
-      if: always()  # 总是上传
+      if: always()
       with:
-        name: test-report
-        path: report.html
-        retention-days: 7  # 保留7天
+        name: allure-results
+        path: reports
+
+    - name: Allure Report  # 生成美报告
+      if: always()
+      uses: simple-elf/allure-report-action@v1
+      with:
+        allure_results: allure-results
+      id: allure-report
+
+    - name: View Allure Report  # 网页评论
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { data } = await github.rest.repos.createCommitComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            commit_sha: context.sha,
+            body: '## [Allure报告] ${{ steps.allure-report.outputs.report_url }}'
+          })

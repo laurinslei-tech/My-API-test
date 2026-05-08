@@ -1,2 +1,0 @@
-GET测试通过！响应数据: quia et suscipit
-suscipit recusandae consequuntur 
