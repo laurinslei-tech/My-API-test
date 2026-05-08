@@ -1,18 +1,24 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'python:3.11'  # Python容器跑
+      args '-u root'  # root权限
+    }
+  }
 
   stages {
-    stage('Install') {
+    stage('Checkout') {
       steps {
-        sh '''
-        pip install -r requirements.txt || pip install pytest requests pytest-html
-        '''
+        checkout scm
       }
     }
 
-    stage('Pytest') {
+    stage('Test') {
       steps {
-        sh 'pytest test_api_ok.py -v --html=report.html --self-contained-html'
+        sh '''
+        pip install pytest requests pytest-html allure-pytest -r requirements.txt
+        pytest test_api_ok.py -v --alluredir=reports --html=report.html --self-contained-html
+        '''
       }
     }
   }
@@ -21,12 +27,11 @@ pipeline {
     always {
       publishHTML([
         allowMissing: false,
-        reportDir: '',
+        reportDir: '.',
         reportFiles: 'report.html',
-        reportName: 'HTML Report',
-        reportTitles: ''
+        reportName: 'Pytest Report'
       ])
-      archiveArtifacts artifacts: 'report.html', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'report.html, reports/**', allowEmptyArchive: true
     }
   }
 }
