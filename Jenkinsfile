@@ -1,8 +1,8 @@
 pipeline {
   agent {
     docker {
-      image 'python:3.11'  # Python容器跑
-      args '-u root'  # root权限
+      image 'python:3.11'  // Python容器跑
+      args '-u root'  // root权限
     }
   }
 
@@ -16,7 +16,7 @@ pipeline {
     stage('Test') {
       steps {
         sh '''
-        pip install pytest requests pytest-html allure-pytest -r requirements.txt
+        pip install pytest requests pytest-html allure-pytest -r requirements.txt || true
         pytest test_api_ok.py -v --alluredir=reports --html=report.html --self-contained-html
         '''
       }
