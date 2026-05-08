@@ -1,0 +1,41 @@
+name: API Automation Test  # 流水线名
+
+on:  # 触发时机
+  push:  # Push代码
+    branches: [ main ]  # main分支
+  pull_request:  # PR时
+    branches: [ main ]
+
+jobs:  # 任务
+  test:
+    runs-on: ubuntu-latest  # 云Ubuntu机 (免费)
+
+    steps:  # 步骤
+    - uses: actions/checkout@v4  # 拉代码
+
+    - name: Set up Python  # 装Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies  # pip装包
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # 如果有requirements.txt
+
+    - name: Run pytest  # 跑测试！
+      run: |
+        pip install pytest requests pytest-html
+        pytest test_api_ok.py -v --html=report.html --self-contained-html
+
+    - name: Upload report  # 上传报告 (下载看)
+      uses: actions/upload-artifact@v4
+      with:
+        name: pytest-report
+        path: report.html
+
+    - name: Publish Test Report  # GitHub页内报告
+      uses: mikepenz/action-junit@v4
+      if: always()
+      with:
+        report_path: ./
