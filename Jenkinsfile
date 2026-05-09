@@ -9,7 +9,14 @@ pipeline {
     }
     post {
         always {
-            publishHTML(reportDir: '.', reportFiles: 'report.html', reportName: '测试报告')
+            publishHTML(
+                allowMissing: true,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: '.',
+                reportFiles: 'report.html',
+                reportName: '测试报告'
+            )
         }
     }
 }
