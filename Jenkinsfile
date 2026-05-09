@@ -1,20 +1,28 @@
 pipeline {
-  agent any  // host节点
+  agent any
 
   stages {
-    stage('Test') {
+    stage('Setup Python') {
       steps {
         sh '''
-        # 临时Python容器跑
-        docker run --rm \\
-          -v $(pwd):/app \\
-          -w /app \\
-          python:3.11 \\
-          bash -c "
-          pip install pytest requests pytest-html -r requirements.txt
-          pytest test_api_ok.py -v --html=report.html --self-contained-html --alluredir=reports
-          ls -la report.html reports/
-          "
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq python3 python3-pip curl
+        sudo pip3 install pytest requests pytest-html allure-pytest -r requirements.txt --quiet
+        which pytest
+        pytest --version
+        '''
+      }
+    }
+
+    stage('Pytest') {
+      steps {
+        sh '''
+        pytest test_api_ok.py -v \\
+          --html=report.html \\
+          --self-contained-html \\
+          --alluredir=reports \\
+          --junitxml=report.xml
+        ls -la report.html reports/
         '''
       }
     }
@@ -28,9 +36,13 @@ pipeline {
         keepAll: true,
         reportDir: '.',
         reportFiles: 'report.html',
-        reportName: 'Pytest Report'
+        reportName: 'Pytest HTML Report'
       ])
-      archiveArtifacts artifacts: 'report.html, reports/**', allowEmptyArchive: true
+      junit([
+        allowEmptyResults: true,
+        testResults: 'report.xml'
+      ])
+      archiveArtifacts artifacts: 'report.html, reports/**', fingerprint: true
     }
   }
 }
