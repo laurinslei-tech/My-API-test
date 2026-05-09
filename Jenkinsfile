@@ -2,18 +2,18 @@ pipeline {
   agent {
     docker {
       image 'python:3.11'
-      args '-u root -v /var/run/docker.sock:/var/run/docker.sock'  // docker权限
+      args '-u root'
     }
   }
 
   stages {
     stage('Checkout') {
       steps {
-        checkout scm  // 拉repo
+        checkout scm
       }
     }
 
-    stage('Install Deps') {
+    stage('Install') {
       steps {
         sh '''
         pip install -r requirements.txt || pip install pytest requests pytest-html allure-pytest
@@ -36,30 +36,22 @@ pipeline {
 
   post {
     always {
-      // HTML报告
       publishHTML([
         allowMissing: false,
+        alwaysLinkToLastBuild: true,
+        keepAll: true,
         reportDir: '.',
         reportFiles: 'report.html',
-        reportName: 'Pytest HTML Report',
-        reportTitles: ''
+        reportName: 'Pytest HTML'
       ])
-      // Allure报告 (插件)
-      allure([
-        includeProperties: false,
-        jdk: '',
-        resultsPath: 'reports'
-      ])
-      // JUnit XML
       junit 'report.xml'
-      // 存档
-      archiveArtifacts artifacts: 'report.html, reports/**, report.xml', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'report.html, reports/**', allowEmptyArchive: true
     }
     success {
-      echo '✅ All PASS!'
+      echo '✅ PASS!'
     }
     failure {
-      echo '❌ Test Failed!'
+      echo '❌ FAILED!'
     }
   }
 }
