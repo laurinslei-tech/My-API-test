@@ -1,9 +1,14 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'my-pytest:final'
+            reuseNode true
+        }
+    }
     stages {
         stage('运行测试') {
             steps {
-                sh 'docker run --rm -v "${WORKSPACE}":/app -w /app my-pytest:final python3 -m pytest test_api_ok.py -v'
+                sh 'python3 -m pytest test_api_ok.py -v'
             }
         }
     }
