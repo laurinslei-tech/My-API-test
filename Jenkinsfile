@@ -27,7 +27,7 @@ docker run --rm -v $PWD:/app -w /app python:3.11-slim bash -c "pip install pytes
                 reportDir: '.',
                 reportFiles: 'report.html',
                 reportName: "API测试报告"
-            })
+            )
         }
     }
 }
