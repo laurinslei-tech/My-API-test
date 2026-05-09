@@ -5,22 +5,14 @@ pipeline {
         stage('拉取代码') {
             steps {
                 checkout scm
-                sh 'ls -la'  // 这里能看到文件！
+                sh 'ls -la'
             }
         }
 
         stage('运行API测试') {
             steps {
                 sh '''
-                    docker run --rm \
-                    -v "$PWD":/app \
-                    -w /app \
-                    --user root \
-                    python:3.11-slim \
-                    bash -c "
-                        pip install pytest requests pytest-html
-                        python -m pytest test_api_ok.py -v --html=report.html
-                    "
+docker run --rm -v $PWD:/app -w /app python:3.11-slim bash -c "pip install pytest requests pytest-html && python -m pytest test_api_ok.py -v --html=report.html"
                 '''
             }
         }
@@ -34,8 +26,8 @@ pipeline {
                 keepAll: true,
                 reportDir: '.',
                 reportFiles: 'report.html',
-                reportName: 'API测试报告'
-            )
+                reportName: "API测试报告"
+            })
         }
     }
 }
