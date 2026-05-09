@@ -1,21 +1,20 @@
 pipeline {
-  agent {
-    docker {
-      image 'python:3.11-slim'  // slim轻+apt
-      args '-u root:root -v $(pwd):/workspace'  // root + 挂载
-    }
-  }
+  agent any  // host节点
 
   stages {
     stage('Test') {
       steps {
         sh '''
-        cd /workspace
-        ls -la
-        pip install --upgrade pip
-        pip install pytest requests pytest-html allure-pytest -r requirements.txt
-        pytest test_api_ok.py -v --html=report.html --self-contained-html --alluredir=reports
-        ls -la report.html reports/
+        # 临时Python容器跑
+        docker run --rm \\
+          -v $(pwd):/app \\
+          -w /app \\
+          python:3.11 \\
+          bash -c "
+          pip install pytest requests pytest-html -r requirements.txt
+          pytest test_api_ok.py -v --html=report.html --self-contained-html --alluredir=reports
+          ls -la report.html reports/
+          "
         '''
       }
     }
@@ -27,11 +26,11 @@ pipeline {
         allowMissing: false,
         alwaysLinkToLastBuild: true,
         keepAll: true,
-        reportDir: '/workspace',
+        reportDir: '.',
         reportFiles: 'report.html',
-        reportName: 'Pytest HTML'
+        reportName: 'Pytest Report'
       ])
-      archiveArtifacts artifacts: 'report.html, reports/**', fingerprint: true
+      archiveArtifacts artifacts: 'report.html, reports/**', allowEmptyArchive: true
     }
   }
 }
