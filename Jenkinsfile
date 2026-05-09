@@ -11,6 +11,7 @@ pipeline {
         stage('运行API测试') {
             steps {
                 sh '''
+                ls -la
                 docker run --rm \
                     -v $(pwd):/app \
                     -w /app \
