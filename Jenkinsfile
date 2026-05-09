@@ -5,20 +5,21 @@ pipeline {
         stage('拉取代码') {
             steps {
                 checkout scm
-                sh 'ls -la'
+                sh 'ls -la'  // 这里能看到文件！
             }
         }
 
         stage('运行API测试') {
             steps {
                 sh '''
-                docker run --rm \
-                    -v ${WORKSPACE}:/app \
+                    docker run --rm \
+                    -v "$PWD":/app \
                     -w /app \
+                    --user root \
                     python:3.11-slim \
                     bash -c "
                         pip install pytest requests pytest-html
-                        pytest test_api_ok.py -v --html=report.html
+                        python -m pytest test_api_ok.py -v --html=report.html
                     "
                 '''
             }
@@ -28,14 +29,12 @@ pipeline {
     post {
         always {
             publishHTML(
-                target: [
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: '.',
-                    reportFiles: 'report.html',
-                    reportName: 'API测试报告'
-                ]
+                allowMissing: true,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: '.',
+                reportFiles: 'report.html',
+                reportName: 'API测试报告'
             )
         }
     }
