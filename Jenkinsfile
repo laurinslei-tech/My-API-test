@@ -1,57 +1,29 @@
 pipeline {
-  agent {
-    docker {
-      image 'python:3.11'
-      args '-u root'
-    }
-  }
+  agent any
 
   stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
-    }
-
-    stage('Install') {
+    stage('Debug Full') {
       steps {
         sh '''
-        pip install -r requirements.txt || pip install pytest requests pytest-html allure-pytest
+        echo "=== LS ==="
+        ls -la test_api_ok.py requirements.txt || echo "文件缺"
+        echo "=== Python ==="
+        which python3 || which python || echo "no python"
+        python3 --version || echo "no py3"
+        echo "=== Pip ==="
+        which pip3 || which pip || echo "no pip"
+        pip3 list || echo "no pip list"
+        echo "=== Install ==="
+        apt-get update -qq
+        apt-get install -y python3 python3-pip || echo "apt fail"
+        pip3 install pytest requests pytest-html --user || echo "pip fail"
+        echo "=== Pytest ==="
+        which pytest || echo "pytest not found"
+        pytest --version || echo "pytest version fail"
+        pytest test_api_ok.py -v --html=report.html || echo "RUN FAIL: $?"
+        ls -la report.html || echo "no report"
         '''
       }
-    }
-
-    stage('Pytest') {
-      steps {
-        sh '''
-        pytest test_api_ok.py -v \\
-          --alluredir=reports \\
-          --html=report.html \\
-          --self-contained-html \\
-          --junitxml=report.xml
-        '''
-      }
-    }
-  }
-
-  post {
-    always {
-      publishHTML([
-        allowMissing: false,
-        alwaysLinkToLastBuild: true,
-        keepAll: true,
-        reportDir: '.',
-        reportFiles: 'report.html',
-        reportName: 'Pytest HTML'
-      ])
-      junit 'report.xml'
-      archiveArtifacts artifacts: 'report.html, reports/**', allowEmptyArchive: true
-    }
-    success {
-      echo '✅ PASS!'
-    }
-    failure {
-      echo '❌ FAILED!'
     }
   }
 }
