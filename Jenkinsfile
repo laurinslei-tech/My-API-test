@@ -1,29 +1,37 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'python:3.11-slim'  // slim轻+apt
+      args '-u root:root -v $(pwd):/workspace'  // root + 挂载
+    }
+  }
 
   stages {
-    stage('Debug Full') {
+    stage('Test') {
       steps {
         sh '''
-        echo "=== LS ==="
-        ls -la test_api_ok.py requirements.txt || echo "文件缺"
-        echo "=== Python ==="
-        which python3 || which python || echo "no python"
-        python3 --version || echo "no py3"
-        echo "=== Pip ==="
-        which pip3 || which pip || echo "no pip"
-        pip3 list || echo "no pip list"
-        echo "=== Install ==="
-        apt-get update -qq
-        apt-get install -y python3 python3-pip || echo "apt fail"
-        pip3 install pytest requests pytest-html --user || echo "pip fail"
-        echo "=== Pytest ==="
-        which pytest || echo "pytest not found"
-        pytest --version || echo "pytest version fail"
-        pytest test_api_ok.py -v --html=report.html || echo "RUN FAIL: $?"
-        ls -la report.html || echo "no report"
+        cd /workspace
+        ls -la
+        pip install --upgrade pip
+        pip install pytest requests pytest-html allure-pytest -r requirements.txt
+        pytest test_api_ok.py -v --html=report.html --self-contained-html --alluredir=reports
+        ls -la report.html reports/
         '''
       }
+    }
+  }
+
+  post {
+    always {
+      publishHTML([
+        allowMissing: false,
+        alwaysLinkToLastBuild: true,
+        keepAll: true,
+        reportDir: '/workspace',
+        reportFiles: 'report.html',
+        reportName: 'Pytest HTML'
+      ])
+      archiveArtifacts artifacts: 'report.html, reports/**', fingerprint: true
     }
   }
 }
