@@ -11,15 +11,16 @@ pipeline {
         stage('运行API测试') {
             steps {
                 sh '''
+                # 直接用 Python 镜像！不用装系统！超快！
                 docker run --rm \
                     -v $(pwd):/app \
                     -w /app \
-                    ubuntu:22.04 bash -c "
-                        apt-get update -qq
-                        apt-get install -y python3 python3-pip
-                        pip3 install pytest requests pytest-html
+                    python:3.11-slim \
+                    bash -c "
+                        # 只装依赖，超快！1-3秒完成！
+                        pip install pytest requests pytest-html
                         
-                        # 关键在这里！加了 -v 就能看到 pass 数量
+                        # 运行测试，显示详细结果
                         pytest -v --html=report.html
                     "
                 '''
