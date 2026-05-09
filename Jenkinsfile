@@ -5,15 +5,15 @@ pipeline {
         stage('拉取代码') {
             steps {
                 checkout scm
+                sh 'ls -la'
             }
         }
 
         stage('运行API测试') {
             steps {
                 sh '''
-                ls -la
                 docker run --rm \
-                    -v $(pwd):/app \
+                    -v ${WORKSPACE}:/app \
                     -w /app \
                     python:3.11-slim \
                     bash -c "
