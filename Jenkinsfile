@@ -3,7 +3,9 @@ pipeline {
     stages {
         stage('运行测试') {
             steps {
-                sh 'docker run --rm -v $PWD:/app -w /app my-pytest python -m pytest test_api_ok.py -v --html=report.html'
+                sh 'ls -la'
+                sh 'pwd'
+                sh 'docker run --rm -v ${WORKSPACE}:${WORKSPACE} -w ${WORKSPACE} my-pytest python -m pytest test_api_ok.py -v --html=report.html'
             }
         }
     }
