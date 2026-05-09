@@ -1,37 +1,18 @@
 pipeline {
-  agent {
-    docker {
-      image 'python:3.11'  // Python容器跑
-      args '-u root'  // root权限
-    }
-  }
+  agent any
 
   stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
-    }
-
-    stage('Test') {
+    stage('Debug') {
       steps {
         sh '''
-        pip install pytest requests pytest-html allure-pytest -r requirements.txt || true
-        pytest test_api_ok.py -v --alluredir=reports --html=report.html --self-contained-html
+        ls -la  # 查文件
+        which python3 || echo "no python"
+        pip3 list | grep pytest || echo "no pytest"
+        cat requirements.txt || echo "no req"
+        pytest --version || echo "pytest fail"
+        pytest test_api_ok.py -v --html=report.html || echo "pytest error"
         '''
       }
-    }
-  }
-
-  post {
-    always {
-      publishHTML([
-        allowMissing: false,
-        reportDir: '.',
-        reportFiles: 'report.html',
-        reportName: 'Pytest Report'
-      ])
-      archiveArtifacts artifacts: 'report.html, reports/**', allowEmptyArchive: true
     }
   }
 }
