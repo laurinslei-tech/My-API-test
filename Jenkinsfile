@@ -5,7 +5,7 @@ pipeline {
             steps {
                 sh 'ls -la'
                 sh 'pwd'
-                sh 'docker run --rm -v ${WORKSPACE}:${WORKSPACE} -w ${WORKSPACE} my-pytest python -m pytest test_api_ok.py -v --html=report.html'
+                sh 'docker run --rm -v ${WORKSPACE}:${WORKSPACE} -w ${WORKSPACE} my-pytest python -m pytest test_api.py -v --html=report.html'
             }
         }
     }
