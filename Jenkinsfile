@@ -1,15 +1,19 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'python:3.11'
+    }
+  }
 
   stages {
     stage('Test') {
       steps {
         sh '''
-        apt-get update -qq
-        apt-get install -y python3 python3-pip
-        pip3 install pytest requests pytest-html
-        pytest test_api_ok.py -v --html=report.html --self-contained-html
-        ls -la report.html
+        pip install pytest requests pytest-html allure-pytest -r requirements.txt
+        pytest --version
+        ls test_api_ok.py
+        pytest test_api_ok.py -v --html=report.html --self-contained-html --alluredir=reports
+        ls report.html reports/
         '''
       }
     }
@@ -21,7 +25,7 @@ pipeline {
         allowMissing: false,
         alwaysLinkToLastBuild: true,
         keepAll: true,
-        reportDir: '.',
+        reportDir: '/workspace',
         reportFiles: 'report.html',
         reportName: 'Pytest Report'
       ])
