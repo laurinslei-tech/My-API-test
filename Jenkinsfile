@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     stages {
-        stage('拉代码') {
+        stage('拉取代码') {
             steps {
                 checkout scm
             }
         }
 
-        stage('跑测试') {
+        stage('运行API测试') {
             steps {
                 sh '''
 docker run --rm -v ${WORKSPACE}:/app -w /app my-pytest python -m pytest test_api_ok.py -v --html=report.html
