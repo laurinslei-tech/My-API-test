@@ -1,18 +1,65 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'python:3.11'
+      args '-u root -v /var/run/docker.sock:/var/run/docker.sock'  // docker权限
+    }
+  }
 
   stages {
-    stage('Debug') {
+    stage('Checkout') {
+      steps {
+        checkout scm  // 拉repo
+      }
+    }
+
+    stage('Install Deps') {
       steps {
         sh '''
-        ls -la  # 查文件
-        which python3 || echo "no python"
-        pip3 list | grep pytest || echo "no pytest"
-        cat requirements.txt || echo "no req"
-        pytest --version || echo "pytest fail"
-        pytest test_api_ok.py -v --html=report.html || echo "pytest error"
+        pip install -r requirements.txt || pip install pytest requests pytest-html allure-pytest
         '''
       }
+    }
+
+    stage('Pytest') {
+      steps {
+        sh '''
+        pytest test_api_ok.py -v \\
+          --alluredir=reports \\
+          --html=report.html \\
+          --self-contained-html \\
+          --junitxml=report.xml
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      // HTML报告
+      publishHTML([
+        allowMissing: false,
+        reportDir: '.',
+        reportFiles: 'report.html',
+        reportName: 'Pytest HTML Report',
+        reportTitles: ''
+      ])
+      // Allure报告 (插件)
+      allure([
+        includeProperties: false,
+        jdk: '',
+        resultsPath: 'reports'
+      ])
+      // JUnit XML
+      junit 'report.xml'
+      // 存档
+      archiveArtifacts artifacts: 'report.html, reports/**, report.xml', allowEmptyArchive: true
+    }
+    success {
+      echo '✅ All PASS!'
+    }
+    failure {
+      echo '❌ Test Failed!'
     }
   }
 }
