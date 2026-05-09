@@ -3,9 +3,7 @@ pipeline {
     stages {
         stage('运行测试') {
             steps {
-                sh 'ls -la'
-                sh 'pwd'
-                sh 'docker run --rm -v ${WORKSPACE}:${WORKSPACE} -w ${WORKSPACE} my-pytest python -m pytest test_api.py -v --html=report.html'
+                sh 'docker run --rm -v $PWD:/app -w /app my-pytest python simple_test.py -v --html=report.html'
             }
         }
     }
@@ -13,7 +11,7 @@ pipeline {
         always {
             publishHTML(
                 allowMissing: true,
-                alwaysLinkToLastBuild: true,
+                alwaysLinkLink: true,
                 keepAll: true,
                 reportDir: '.',
                 reportFiles: 'report.html',
