@@ -1,19 +1,16 @@
 pipeline {
-  agent {
-    docker {
-      image 'python:3.11'
-    }
-  }
+  agent any
 
   stages {
     stage('Test') {
       steps {
         sh '''
-        pip install pytest requests pytest-html allure-pytest -r requirements.txt
-        pytest --version
-        ls test_api_ok.py
-        pytest test_api_ok.py -v --html=report.html --self-contained-html --alluredir=reports
-        ls report.html reports/
+        sudo apt-get update -qq
+        sudo apt-get install -y python3 python3-pip
+        pip3 install pytest requests pytest-html --user
+        export PATH=$HOME/.local/bin:$PATH
+        pytest test_api_ok.py -v --html=report.html --self-contained-html
+        ls -la report.html
         '''
       }
     }
@@ -21,14 +18,13 @@ pipeline {
 
   post {
     always {
-      publishHTML([
-        allowMissing: false,
-        alwaysLinkToLastBuild: true,
-        keepAll: true,
-        reportDir: '/workspace',
-        reportFiles: 'report.html',
-        reportName: 'Pytest Report'
-      ])
+      archiveArtifacts artifacts: 'report.html', allowEmptyArchive: true, fingerprint: true
+    }
+    success {
+      echo '✅ SUCCESS!'
+    }
+    failure {
+      echo '❌ FAILURE!'
     }
   }
 }
