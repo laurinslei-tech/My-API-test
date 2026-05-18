@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('API自动化测试') {
             steps {
-                sh 'python3 -m pytest test_api_ok.py -v --alluredir=allure-results'
+                sh 'python3 -m pytest -v --alluredir=allure-results'
             }
         }
     }
